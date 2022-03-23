@@ -1,18 +1,8 @@
-(defpackage :breakpoints
-  (:use :cl)
-  (:export
-   #:break-on-entry
-   #:toggle-breakpoint
-   #:remove-breakpoint
-   #:remove-all-breakpoints
-   #:reinstall-breakpoint
-   #:reinstall-all-breakpoints
-   #:disable-breakpoint
-   #:disable-all-breakpoints
-   #:breakpoint-installed-p
-   #:*breakpoints*))
+;;; swank-breakpoints.lisp --- setup breakpoints from SLIME
+;;
+;; Author: Mariano Montone
 
-(in-package :breakpoints)
+(in-package :swank)
 
 (defvar *breakpoints* (make-hash-table))
 
@@ -24,6 +14,13 @@
         (declare (ignore type replaced))
         (when (eq (symbol-function function-name) break)
           (return-from breakpoint-installed-p t))))))
+
+(defun list-of-breakpoints ()
+  (loop for breakpoint-name being the hash-keys of *breakpoints*
+	  using (hash-value breakpoint)
+	collect (list :name breakpoint-name
+		      :type (getf breakpoint :type)
+		      :enabled (breakpoint-installed-p breakpoint-name))))
 
 (defun break-on-entry (function-name)
   "Setup a breakpoint on entry on FUNCTION-NAME."
@@ -45,10 +42,8 @@
 (defun remove-breakpoint (function-name)
   "Remove breakpoint on FUNCTION-NAME."
   (check-type function-name symbol)
-
   (when (not (breakpoint-installed-p function-name))
     (return-from remove-breakpoint nil))
-
   (let ((breakpoint (gethash function-name *breakpoints*)))
     (destructuring-bind (&key type replaced break) breakpoint
       (declare (ignore type))
@@ -61,10 +56,10 @@
   "Disable breakpoint on FUNCTION-NAME.
 The breakpoint remains in the list of breakpoints."
   (check-type function-name symbol)
-
+  
   (when (not (breakpoint-installed-p function-name))
     (return-from disable-breakpoint nil))
-
+  
   (let ((breakpoint (gethash function-name *breakpoints*)))
     (destructuring-bind (&key type replaced break) breakpoint
       (declare (ignore type))
@@ -98,7 +93,8 @@ The breakpoint remains in the list of breakpoints."
 
 (defun reinstall-breakpoint (function-name)
   "Reinstall breakpoint on FUNCTION-NAME.
-When a function is recompiled, the breakpoint is lost. A call to this function reinstalls the breakpoint."
+When a function is recompiled, the breakpoint is lost. A call to this
+function reinstalls the breakpoint."
   (let ((breakpoint (gethash function-name *breakpoints*)))
     (when breakpoint
       (let ((break (getf breakpoint :break)))
@@ -107,23 +103,9 @@ When a function is recompiled, the breakpoint is lost. A call to this function r
 
 (defun reinstall-all-breakpoints ()
   "Reinstall all breakpoints.
-When a function is recompiled, the breakpoint is lost. A call to this function reintalls all breakpoints."
+When a function is recompiled, the breakpoint is lost. A call to this
+function reintalls all breakpoints."
   (loop for k being each hash-key of *breakpoints*
         do (reinstall-breakpoint k)))
 
-(provide :breakpoints)
-
-(defpackage :slime-breakpoints
-  (:use :cl :breakpoints)
-  (:export #:list-of-breakpoints))
-
-(in-package :slime-breakpoints)
-
-(defun list-of-breakpoints ()
-  (loop for breakpoint-name being the hash-keys of breakpoints:*breakpoints*
-	using (hash-value breakpoint)
-	collect (list :name breakpoint-name
-		      :type (getf breakpoint :type)
-		      :enabled (breakpoints:breakpoint-installed-p breakpoint-name))))
-
-(provide :slime-breakpoints)
+(provide :swank-breakpoints)

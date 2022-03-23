@@ -23,18 +23,32 @@
 
 ;;; Commentary:
 
-;; slime-breakpoints is a SLIME extension that lets you setup breaks on functions and manage them.
+;; slime-breakpoints is a SLIME extension that lets you setup breaks
+;; on functions and manage them.
 
 ;;; Code:
 
 (require 'slime)
+(require 'cl-lib)
+
+(define-slime-contrib slime-breakpoints
+  "Breakpoints management extension for SLIME."
+  (:authors "Mariano Montone")
+  (:license "GPL")
+  ;;  (:slime-dependencies slime-repl)
+  (:swank-dependencies swank-breakpoints)
+  (:on-load
+   ;; setup key bindings
+   (slime-breakpoints-setup-key-bindings)
+   ;; add menu items
+   (slime-breakpoints--extend-slime-menu)))
 
 (defun slime-break-on-entry (function-name)
   "Install breakpoint on FUNCTION-NAME."
   (interactive (list (slime-read-symbol-name "Break on entry: ")))
   (when (not function-name)
     (error "No function name given"))
-  (slime-eval `(breakpoints:break-on-entry (cl:read-from-string ',(slime-qualify-cl-symbol-name function-name))))
+  (slime-eval `(swank:break-on-entry (cl:read-from-string ',(slime-qualify-cl-symbol-name function-name))))
   (message "Breakpoint installed on %s entry" function-name)
   (slime-breakpoints--refresh-breakpoints-buffer))
 
@@ -43,7 +57,7 @@
   (interactive (list (slime-read-symbol-name "Toggle breakpoint: ")))
   (when (not function-name)
     (error "No function name given"))
-  (let ((enabled (slime-eval `(breakpoints:toggle-breakpoint (cl:read-from-string ',(slime-qualify-cl-symbol-name function-name))))))
+  (let ((enabled (slime-eval `(swank:toggle-breakpoint (cl:read-from-string ',(slime-qualify-cl-symbol-name function-name))))))
     (if enabled
         (message "Breakpoint installed on %s entry" function-name)
       (message "Breakpoint removed from %s" function-name)))
@@ -54,14 +68,14 @@
   (interactive (list (slime-read-symbol-name "Remove breakpoint: ")))
   (when (not function-name)
     (error "No function name given"))
-  (slime-eval `(breakpoints:remove-breakpoint (cl:read-from-string ',(slime-qualify-cl-symbol-name function-name))))
+  (slime-eval `(swank:remove-breakpoint (cl:read-from-string ',(slime-qualify-cl-symbol-name function-name))))
   (message "Breakpoint removed")
   (slime-breakpoints--refresh-breakpoints-buffer))
 
 (defun slime-remove-all-breakpoints ()
   "Remove all breakpoints."
   (interactive)
-  (slime-eval '(breakpoints:remove-all-breakpoints))
+  (slime-eval '(swank:remove-all-breakpoints))
   (message "All breakpoints removed.")
   (slime-breakpoints--refresh-breakpoints-buffer))
 
@@ -71,14 +85,14 @@ The breakpoint remains in the list of breakpoints."
   (interactive (list (slime-read-symbol-name "Disable breakpoint: ")))
   (when (not function-name)
     (error "No function name given"))
-  (slime-eval `(breakpoints:disable-breakpoint (cl:read-from-string ',(slime-qualify-cl-symbol-name function-name))))
+  (slime-eval `(swank:disable-breakpoint (cl:read-from-string ',(slime-qualify-cl-symbol-name function-name))))
   (message "Breakpoint disabled")
   (slime-breakpoints--refresh-breakpoints-buffer))
 
 (defun slime-disable-all-breakpoints ()
   "Disable all breakpoints."
   (interactive)
-  (slime-eval '(breakpoints:disable-all-breakpoints))
+  (slime-eval '(swank:disable-all-breakpoints))
   (message "All breakpoints disabled.")
   (slime-breakpoints--refresh-breakpoints-buffer))
 
@@ -87,14 +101,14 @@ The breakpoint remains in the list of breakpoints."
   (interactive (list (slime-read-symbol-name "Reinstall breakpoint: ")))
   (when (not function-name)
     (error "No function name given"))
-  (slime-eval `(breakpoints:reinstall-breakpoint (cl:read-from-string ',(slime-qualify-cl-symbol-name function-name))))
+  (slime-eval `(swank:reinstall-breakpoint (cl:read-from-string ',(slime-qualify-cl-symbol-name function-name))))
   (message "Breakpoint reinstalled")
   (slime-breakpoints--refresh-breakpoints-buffer))
 
 (defun slime-reinstall-all-breakpoints ()
   "Reinstall all breakpoints."
   (interactive)
-  (slime-eval '(breakpoints:reinstall-all-breakpoints))
+  (slime-eval '(swank:reinstall-all-breakpoints))
   (message "All breakpoints reinstalled.")
   (slime-breakpoints--refresh-breakpoints-buffer))
 
@@ -104,7 +118,7 @@ The breakpoint remains in the list of breakpoints."
   :group 'slime-breakpoints-faces)
 
 (defun slime-breakpoints--breakpoints-list ()
-  (slime-eval `(slime-breakpoints:list-of-breakpoints)))
+  (slime-eval `(swank:list-of-breakpoints)))
 
 (cl-defun slime-breakpoints--update-breakpoints-buffer-contents ()
   (let ((breakpoints-list (slime-breakpoints--breakpoints-list)))
@@ -197,18 +211,6 @@ The breakpoint remains in the list of breakpoints."
                       ["Remove all breakpoints" slime-remove-all-breakpoints])
   (easy-menu-add-item 'menubar-slime '("Debugging")
                       ["List breakpoints" slime-list-breakpoints]))
-
-(define-slime-contrib slime-breakpoints
-  "Breakpoints management extension for SLIME."
-  (:authors "Mariano Montone")
-  (:license "GPL")
-  (:swank-dependencies slime-breakpoints)
-  (:on-load
-   ;; setup key bindings
-   (slime-breakpoints-setup-key-bindings)
-   ;; add menu items
-   (slime-breakpoints--extend-slime-menu)))
-
 
 (provide 'slime-breakpoints)
 

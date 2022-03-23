@@ -20,7 +20,8 @@
                        slime-package-fu
                        slime-fontifying-fu
                        slime-trace-dialog
-                       slime-indentation)
+                       slime-indentation
+		       slime-breakpoints)
   (:on-load
    (slime-trace-dialog-init)
    (slime-repl-init)
@@ -35,6 +36,7 @@
    (slime-references-init)
    (slime-package-fu-init)
    (slime-fontifying-fu-init)
-   (slime-indentation-init)))
+   (slime-indentation-init)
+   (slime-breakpoints-init)))
 
 (provide 'slime-fancy)
