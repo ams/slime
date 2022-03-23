@@ -102,9 +102,10 @@ The secondary value indicates the absence of an entry."
   ;; presentations are associated with every REPL result.
   (flet ((send (value)
            (let ((id (and *record-repl-results*
-                          (save-presented-object value))))
+                          (save-presented-object value)))
+		 (*echo-area-prefix* ""))
 	     (send-to-emacs `(:presentation-start ,id :repl-result))
-	     (send-to-emacs `(:write-string ,(prin1-to-string value)
+	     (send-to-emacs `(:write-string ,(values-to-string value)
 					    :repl-result))
 	     (send-to-emacs `(:presentation-end ,id :repl-result))
 	     (send-to-emacs `(:write-string ,(string #\Newline)

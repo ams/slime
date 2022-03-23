@@ -1733,15 +1733,24 @@ Errors are trapped and invoke our debugger."
 (defvar *echo-area-prefix* "=> "
   "A prefix that `format-values-for-echo-area' should use.")
 
+(defvar *format-integer-values-verbosley-for-echo-area* 64.)
+  
 (defun format-values-for-echo-area (values)
   (with-buffer-syntax ()
     (let ((*print-readably* nil))
       (cond ((null values) "; No value")
             ((and (integerp (car values)) (null (cdr values)))
              (let ((i (car values)))
-               (format nil "~A~D (~a bit~:p, #x~X, #o~O, #b~B)" 
-                       *echo-area-prefix*
-                       i (integer-length i) i i i)))
+               (cond ((>= (integer-length i) *format-integer-values-verbosley-for-echo-area*)
+                      (format nil "~A~D" *echo-area-prefix* i))
+                     ((and (< i char-code-limit) (code-char i))
+                      (format nil "~A~D (~a bit~:p, #x~X, #o~O, #b~B, ~S)"
+                              *echo-area-prefix*
+                              i (integer-length i) i i i (code-char i)))
+                     (t
+                      (format nil "~A~D (~a bit~:p, #x~X, #o~O, #b~B)"
+                              *echo-area-prefix*
+                              i (integer-length i) i i i)))))
             ((and (typep (car values) 'ratio)
                   (null (cdr values))
                   (ignore-errors
