@@ -151,7 +151,7 @@
 
 ;; The SIGIO stuff should probably be removed as it's unlikey that
 ;; anybody uses it.
-#-win32
+#-(or win32 haiku)
 (progn
   (defimplementation install-sigint-handler (function)
     (sb-sys:enable-interrupt sb-unix:sigint
@@ -1752,7 +1752,6 @@ stack."
   #+darwin
   (progn
     (defun make-sem ()
-      (declare (optimize speed))
       (sb-alien:alien-funcall
        (sb-alien:extern-alien
         "dispatch_semaphore_create"
@@ -1760,7 +1759,6 @@ stack."
        0))
 
     (defun wait-sem (sem)
-      (declare (optimize speed))
       (sb-alien:alien-funcall
        (sb-alien:extern-alien "dispatch_semaphore_wait"
                               (function sb-alien:long sb-sys:system-area-pointer sb-alien:long-long))
@@ -1768,7 +1766,6 @@ stack."
        -1))
 
     (defun signal-sem (sem)
-      (declare (optimize speed))
       (sb-alien:alien-funcall
        (sb-alien:extern-alien "dispatch_semaphore_signal"
                               (function sb-alien:long sb-sys:system-area-pointer))
