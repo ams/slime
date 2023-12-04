@@ -2256,10 +2256,14 @@ Operation was KERNEL::DIVISION, operands (1 0).\"
       (invoke-restart-interactively restart))))
 
 (defslimefun sldb-abort ()
-  (invoke-restart (find 'abort *sldb-restarts* :key #'restart-name)))
+  (let ((restart (find 'abort *sldb-restarts* :key #'restart-name)))
+    (when restart
+      (invoke-restart (find 'abort *sldb-restarts* :key #'restart-name)))))
 
 (defslimefun sldb-continue ()
-  (invoke-restart (find 'continue *sldb-restarts* :key #'restart-name)))
+  (let ((restart (find 'continue *sldb-restarts* :key #'restart-name)))
+    (when restart
+      (invoke-restart restart))))
 
 (defun coerce-to-condition (datum args)
   (etypecase datum
@@ -3610,7 +3614,8 @@ after each command.")
        (handle-indentation-cache-request c request))
       (multithreaded-connection
        (without-slime-interrupts
-         (send (mconn.indentation-cache-thread c) request))))))
+         (send (mconn.indentation-cache-thread c) request)))
+      (null t))))
 
 (defun indentation-cache-loop (connection)
   (with-connection (connection)
