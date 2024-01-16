@@ -22,7 +22,7 @@
   (when (probe-file "sys:profile.fas")
     (require :profile)
     (pushnew :profile *features*))
-  (when (probe-file "sys:serve-event")
+  (when (probe-file "sys:src;lisp;modules;serve-event;")
     (require :serve-event)
     (pushnew :serve-event *features*))
   (when (find-symbol "TEMPORARY-DIRECTORY" "EXT")
@@ -304,10 +304,10 @@
             (warnings-p)
             (failure-p))
         (unwind-protect
-             (with-open-file (tmp-stream tmp-file :direction :output
-                                                  :if-exists :supersede)
-               (write-string string tmp-stream)
-               (finish-output tmp-stream)
+             (progn
+               (with-open-file (tmp-stream tmp-file :direction :output
+                                                    :if-exists :overwrite)
+                 (write-string string tmp-stream))
                (multiple-value-setq (fasl-file warnings-p failure-p)
                  (let ((truename (or filename (note-buffer-tmpfile tmp-file buffer))))
                    (compile-file tmp-file
